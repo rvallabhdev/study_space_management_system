@@ -1,0 +1,812 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}New Enrollment{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+    .form-select, .form-control {
+        border-radius: 6px;
+    }
+    input:focus, select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+    .time-select-group {
+        display: flex;
+        gap: 8px;
+    }
+    .time-select-group select {
+        flex: 1;
+    }
+    .seat-type-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    .seat-type-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+    }
+    .seat-type-card.selected {
+        border-color: #28a745;
+        background-color: #f8fff8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-journal-bookmark-fill"></i> New Enrollment</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="enrollmentForm">
+                        {% csrf_token %}
+                        
+                        <!-- Display non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <!-- ==================== STUDENT SELECTION ==================== -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-person"></i> Student Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-search"></i> Search Student
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="student" id="studentSelect" class="form-select student-search" required>
+                                                <option value="">Search by name or mobile...</option>
+                                                {% for student in students %}
+                                                    <option value="{{ student.id }}" 
+                                                            data-name="{{ student.name }}"
+                                                            data-mobile="{{ student.mobile }}"
+                                                            data-aadhaar="{{ student.aadhaar_number }}">
+                                                        {{ student.name }} ({{ student.mobile }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <div id="studentDetails" class="mt-2 small text-muted" style="display: none;">
+                                                <i class="bi bi-info-circle"></i> 
+                                                <span id="studentName"></span> | 
+                                                Mobile: <span id="studentMobile"></span> | 
+                                                Aadhaar: <span id="studentAadhaar"></span>
+                                            </div>
+                                            {% if form.student.errors %}
+                                                <div class="text-danger small">{{ form.student.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ==================== SPACE SELECTION ==================== -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-building"></i> Study Space</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-building"></i> Select Study Space
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="study_space" id="studySpaceSelect" class="form-select" required>
+                                                <option value="">Select a study space...</option>
+                                                {% for space in study_spaces %}
+                                                    <option value="{{ space.id }}" data-capacity="{{ space.capacity }}">
+                                                        {{ space.name }} (Capacity: {{ space.capacity }} seats)
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- ==================== BOOKING TYPE ==================== -->
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Booking Type</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-tag"></i> Membership Type
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="booking_type" id="bookingTypeSelect" class="form-select" required>
+                                                <option value="">Select type...</option>
+                                                <option value="hourly">Hourly (Pay per hour)</option>
+                                                <option value="daily">Daily (Full day access)</option>
+                                                <option value="weekly">Weekly (Fixed hours, select days)</option>
+                                                <option value="monthly">Monthly (Fixed hours per day)</option>
+                                                <option value="custom">Custom (Admin defined)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ==================== DATE RANGE ==================== -->
+                            <div class="col-md-8">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-calendar"></i> Enrollment Period</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-calendar-plus"></i> Start Date
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input type="text" name="start_date" id="startDate" class="form-control datepicker" placeholder="Select start date" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-calendar-minus"></i> End Date
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input type="text" name="end_date" id="endDate" class="form-control datepicker" placeholder="Select end date" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ==================== DYNAMIC FIELDS BASED ON BOOKING TYPE ==================== -->
+                        
+                        <!-- Hourly Booking Fields -->
+                        <div id="hourlyFields" class="card mb-3" style="display: none;">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Time Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Enter start and end time for this booking.
+                                </div>
+                                
+                                <!-- Custom Hours with Time Pickers -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-sun"></i> Start Time
+                                            </label>
+                                            <div class="time-select-group">
+                                                <select name="custom_start_hour" id="customStartHour" class="form-select">
+                                                    <option value="">Hour</option>
+                                                </select>
+                                                <select name="custom_start_minute" id="customStartMinute" class="form-select">
+                                                    <option value="">Min</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-moon"></i> End Time
+                                            </label>
+                                            <div class="time-select-group">
+                                                <select name="custom_end_hour" id="customEndHour" class="form-select">
+                                                    <option value="">Hour</option>
+                                                </select>
+                                                <select name="custom_end_minute" id="customEndMinute" class="form-select">
+                                                    <option value="">Min</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Weekly Booking Fields -->
+                        <div id="weeklyFields" class="card mb-3" style="display: none;">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Weekly Schedule</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-hourglass-split"></i> Hours per Day
+                                            </label>
+                                            <input type="number" name="hours_per_day" id="hoursPerDay" class="form-control" step="0.5" min="0.5" max="24" placeholder="e.g., 2.5">
+                                            <small class="form-text text-muted">Number of hours per day (e.g., 2.5 for 2 hours 30 minutes)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-calendar-day"></i> Days of Week
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="0" id="dayMon">
+                                                    <label class="form-check-label" for="dayMon">Monday</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="dayTue">
+                                                    <label class="form-check-label" for="dayTue">Tuesday</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="2" id="dayWed">
+                                                    <label class="form-check-label" for="dayWed">Wednesday</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="3" id="dayThu">
+                                                    <label class="form-check-label" for="dayThu">Thursday</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="4" id="dayFri">
+                                                    <label class="form-check-label" for="dayFri">Friday</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="5" id="daySat">
+                                                    <label class="form-check-label" for="daySat">Saturday</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="6" id="daySun">
+                                                    <label class="form-check-label" for="daySun">Sunday</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="days_of_week" id="daysOfWeek">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Monthly Booking Fields -->
+                        <div id="monthlyFields" class="card mb-3" style="display: none;">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-calendar-month"></i> Monthly Commitment</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-hourglass-split"></i> Hours per Day
+                                    </label>
+                                    <input type="number" name="hours_per_day_monthly" id="hoursPerDayMonthly" class="form-control" step="0.5" min="0.5" max="24" placeholder="e.g., 2">
+                                    <small class="form-text text-muted">Number of hours per day (e.g., 2 for 2 hours daily)</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ==================== SEAT SELECTION ==================== -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-chair"></i> Seat Selection</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-tag"></i> Seat Type
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="seat-type-card card text-center p-3" data-seat-type="standard">
+                                                <i class="bi bi-laptop fs-1 text-primary"></i>
+                                                <h5 class="mt-2 mb-0">Standard</h5>
+                                                <small class="text-muted">Non-AC Desk</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="seat-type-card card text-center p-3" data-seat-type="premium">
+                                                <i class="bi bi-star-fill fs-1 text-warning"></i>
+                                                <h5 class="mt-2 mb-0">Air Conditioned</h5>
+                                                <small class="text-muted">Premium AC Desk</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="seat_type" id="selectedSeatType" value="">
+                                </div>
+                                
+                                <!-- ==================== AVAILABLE SEATS DROPDOWN ==================== -->
+                                <div class="mb-3" id="seatSelectContainer" style="display: none;">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-grid-3x3-gap-fill"></i> Select Available Seat
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="seat" id="seatSelect" class="form-select">
+                                        <option value="">-- Select a seat --</option>
+                                    </select>
+                                    <div id="availableSeatsInfo" class="mt-2 small text-muted"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ==================== PRICING SECTION ==================== -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-currency-rupee"></i> Pricing</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> 
+                                    <strong>Live Calculation:</strong> Price is calculated automatically based on your selections.
+                                    You can optionally enter a custom price to override.
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-calculator"></i> Calculated Price
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="text" id="calculatedPrice" class="form-control" readonly style="background-color: #e9ecef;">
+                                                <span class="input-group-text">total</span>
+                                            </div>
+                                            <div id="priceBreakdown" class="small text-muted mt-1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-pencil-square"></i> Custom Price (Optional)
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" name="custom_price" id="customPrice" class="form-control" step="0.01" placeholder="Enter custom total">
+                                                <span class="input-group-text">total</span>
+                                            </div>
+                                            <small class="form-text text-muted">Leave empty to use calculated price</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Final Price Display -->
+                                <div id="finalPriceDisplay" class="alert alert-success mt-3">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                        <div>
+                                            <i class="bi bi-check-circle-fill"></i> <strong>Final Amount:</strong>
+                                            <span id="finalAmount" class="fs-3 fw-bold text-success">₹0.00</span>
+                                        </div>
+                                        <div>
+                                            <span id="priceNote" class="small text-muted"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <input type="hidden" name="total_amount" id="totalAmount">
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'operations_management:enrollment_list' %}" class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-circle"></i> Create Enrollment
+                            </button>
+                        </div>
+                        
+                        <!-- Hidden fields for time values -->
+                        <input type="hidden" name="custom_start_time" id="hidden_custom_start_time">
+                        <input type="hidden" name="custom_end_time" id="hidden_custom_end_time">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pass pricing data to JavaScript using json_script (safe and automatic escaping) -->
+{{ pricing_plans|json_script:"pricing-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // ========== PRICING DATA FROM DJANGO ==========
+    // Retrieve the JSON data injected via json_script
+    let pricingData = [];
+    const pricingScript = document.getElementById('pricing-data');
+    if (pricingScript) {
+        pricingData = JSON.parse(pricingScript.textContent);
+    }
+    
+    // Build rates object with fallback defaults
+    const RATES = {
+        hourly: { standard: 100, premium: 150 },
+        daily: { standard: 500, premium: 750 },
+        weekly: { standard: 2500, premium: 3500 },
+        monthly: { standard: 8000, premium: 12000 }
+    };
+    
+    // Override with actual data from database
+    pricingData.forEach(function(plan) {
+        var type = plan.pricing_type;
+        var seatType = plan.seat_type || 'standard';
+        var price = 0;
+        if (type === 'hourly') price = plan.price_per_hour;
+        else if (type === 'daily') price = plan.price_per_day;
+        else if (type === 'weekly') price = plan.price_per_week;
+        else if (type === 'monthly') price = plan.price_per_month;
+        
+        if (RATES[type] && price > 0) {
+            RATES[type][seatType] = price;
+        }
+    });
+    
+    // ========== INITIALIZE SELECT2 ==========
+    $('#studentSelect').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search by name or mobile...',
+        allowClear: true,
+        width: '100%'
+    });
+    
+    // ========== POPULATE TIME SELECTORS ==========
+    function populateTimeSelectors() {
+        var hourSelects = ['customStartHour', 'customEndHour'];
+        hourSelects.forEach(function(selectId) {
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            while (select.options.length > 1) select.remove(1);
+            for (var i = 0; i < 24; i++) {
+                var option = document.createElement('option');
+                option.value = i;
+                option.textContent = i.toString().padStart(2, '0');
+                select.appendChild(option);
+            }
+        });
+        
+        var minuteSelects = ['customStartMinute', 'customEndMinute'];
+        var minutes = ['00', '15', '30', '45'];
+        minuteSelects.forEach(function(selectId) {
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            while (select.options.length > 1) select.remove(1);
+            minutes.forEach(function(minute) {
+                var option = document.createElement('option');
+                option.value = minute;
+                option.textContent = minute;
+                select.appendChild(option);
+            });
+        });
+    }
+    
+    // ========== DATE PICKER ==========
+    flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        altInput: true,
+        altFormat: "F j, Y",
+        allowInput: true
+    });
+    
+    populateTimeSelectors();
+    
+    // ========== STUDENT DETAILS ==========
+    var studentSelect = document.getElementById('studentSelect');
+    var studentDetails = document.getElementById('studentDetails');
+    if (studentSelect) {
+        studentSelect.addEventListener('change', function() {
+            var selectedOption = this.options[this.selectedIndex];
+            if (this.value) {
+                document.getElementById('studentName').textContent = selectedOption.getAttribute('data-name');
+                document.getElementById('studentMobile').textContent = selectedOption.getAttribute('data-mobile');
+                document.getElementById('studentAadhaar').textContent = selectedOption.getAttribute('data-aadhaar');
+                studentDetails.style.display = 'block';
+            } else {
+                studentDetails.style.display = 'none';
+            }
+        });
+    }
+    
+    // ========== SEAT TYPE SELECTION ==========
+    var seatTypeCards = document.querySelectorAll('.seat-type-card');
+    var selectedSeatTypeInput = document.getElementById('selectedSeatType');
+    var seatSelectContainer = document.getElementById('seatSelectContainer');
+    var seatSelect = document.getElementById('seatSelect');
+    var availableSeatsInfo = document.getElementById('availableSeatsInfo');
+    
+    seatTypeCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            seatTypeCards.forEach(function(c) { c.classList.remove('selected'); });
+            this.classList.add('selected');
+            var seatType = this.getAttribute('data-seat-type');
+            selectedSeatTypeInput.value = seatType;
+            updateAvailableSeats();
+            updatePriceDisplay();
+        });
+    });
+    
+    // ========== BOOKING TYPE TOGGLE ==========
+    var bookingTypeSelect = document.getElementById('bookingTypeSelect');
+    var hourlyFields = document.getElementById('hourlyFields');
+    var weeklyFields = document.getElementById('weeklyFields');
+    var monthlyFields = document.getElementById('monthlyFields');
+    
+    function toggleBookingFields() {
+        hourlyFields.style.display = 'none';
+        weeklyFields.style.display = 'none';
+        monthlyFields.style.display = 'none';
+        var type = bookingTypeSelect.value;
+        if (type === 'hourly') hourlyFields.style.display = 'block';
+        else if (type === 'weekly') weeklyFields.style.display = 'block';
+        else if (type === 'monthly') monthlyFields.style.display = 'block';
+        updateAvailableSeats();
+        updatePriceDisplay();
+    }
+    if (bookingTypeSelect) bookingTypeSelect.addEventListener('change', toggleBookingFields);
+    
+    // ========== UPDATE AVAILABLE SEATS ==========
+    var studySpaceSelect = document.getElementById('studySpaceSelect');
+    var startDateInput = document.getElementById('startDate');
+    var endDateInput = document.getElementById('endDate');
+    
+    function updateAvailableSeats() {
+        var spaceId = studySpaceSelect ? studySpaceSelect.value : '';
+        var bookingType = bookingTypeSelect ? bookingTypeSelect.value : '';
+        var startDate = startDateInput ? startDateInput.value : '';
+        var endDate = endDateInput ? endDateInput.value : '';
+        var seatType = selectedSeatTypeInput ? selectedSeatTypeInput.value : '';
+        if (!spaceId || !bookingType || !startDate || !endDate || !seatType) {
+            if (seatSelectContainer) seatSelectContainer.style.display = 'none';
+            return;
+        }
+        
+        var params = new URLSearchParams({
+            study_space: spaceId,
+            booking_type: bookingType,
+            start_date: startDate,
+            end_date: endDate,
+            seat_type: seatType
+        });
+        
+        if (bookingType === 'hourly') {
+            var startHour = document.getElementById('customStartHour').value;
+            var startMin = document.getElementById('customStartMinute').value;
+            var endHour = document.getElementById('customEndHour').value;
+            var endMin = document.getElementById('customEndMinute').value;
+            if (startHour && startMin && endHour && endMin) {
+                params.append('start_time', startHour.padStart(2,'0') + ':' + startMin.padStart(2,'0'));
+                params.append('end_time', endHour.padStart(2,'0') + ':' + endMin.padStart(2,'0'));
+            } else {
+                seatSelectContainer.style.display = 'none';
+                return;
+            }
+        }
+        
+        fetch('/api/available-seats/?' + params.toString())
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                seatSelect.innerHTML = '<option value="">-- Select a seat --</option>';
+                data.seats.forEach(function(seat) {
+                    var option = document.createElement('option');
+                    option.value = seat.id;
+                    option.textContent = seat.seat_number;
+                    seatSelect.appendChild(option);
+                });
+                if (data.seats.length > 0) {
+                    seatSelectContainer.style.display = 'block';
+                    availableSeatsInfo.innerHTML = '<i class="bi bi-check-circle text-success"></i> ' + data.seats.length + ' ' + seatType + ' seat(s) available';
+                } else {
+                    seatSelectContainer.style.display = 'block';
+                    availableSeatsInfo.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> No seats available for this criteria</span>';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                seatSelectContainer.style.display = 'block';
+                availableSeatsInfo.innerHTML = '<span class="text-danger">Error loading seats. Please try again.</span>';
+            });
+    }
+    
+    // ========== DAYS OF WEEK HANDLER ==========
+    var dayCheckboxes = ['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'];
+    var daysOfWeekInput = document.getElementById('daysOfWeek');
+    function updateDaysOfWeek() {
+        var selected = [];
+        dayCheckboxes.forEach(function(id, idx) {
+            if (document.getElementById(id).checked) selected.push(idx);
+        });
+        daysOfWeekInput.value = selected.join(',');
+        updatePriceDisplay();
+    }
+    dayCheckboxes.forEach(function(id) {
+        document.getElementById(id).addEventListener('change', updateDaysOfWeek);
+    });
+    
+    // ========== PRICE CALCULATION ==========
+    var calculatedPriceInput = document.getElementById('calculatedPrice');
+    var customPriceInput = document.getElementById('customPrice');
+    var finalAmountSpan = document.getElementById('finalAmount');
+    var priceBreakdownSpan = document.getElementById('priceBreakdown');
+    var priceNoteSpan = document.getElementById('priceNote');
+    var totalAmountHidden = document.getElementById('totalAmount');
+    
+    function getDurationDetails() {
+        var startDate = startDateInput.value;
+        var endDate = endDateInput.value;
+        var bookingType = bookingTypeSelect.value;
+        var seatType = selectedSeatTypeInput.value;
+        var hoursPerDay = document.getElementById('hoursPerDay') ? document.getElementById('hoursPerDay').value : 0;
+        var hoursPerDayMonthly = document.getElementById('hoursPerDayMonthly') ? document.getElementById('hoursPerDayMonthly').value : 0;
+        var hpd = hoursPerDay || hoursPerDayMonthly || 0;
+        
+        if (!startDate || !endDate || !bookingType || !seatType) return null;
+        
+        var start = new Date(startDate);
+        var end = new Date(endDate);
+        var days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        var weeks = days / 7;
+        var months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+        
+        var totalHours = 0, unitCount = 0, unitLabel = '', rate = 0;
+        if (bookingType === 'hourly') {
+            var startHour = parseInt(document.getElementById('customStartHour').value) || 0;
+            var startMin = parseInt(document.getElementById('customStartMinute').value) || 0;
+            var endHour = parseInt(document.getElementById('customEndHour').value) || 0;
+            var endMin = parseInt(document.getElementById('customEndMinute').value) || 0;
+            totalHours = (endHour + endMin/60) - (startHour + startMin/60);
+            unitCount = totalHours;
+            unitLabel = totalHours === 1 ? 'hour' : 'hours';
+            rate = RATES.hourly[seatType] || 100;
+        } else if (bookingType === 'daily') {
+            unitCount = days;
+            unitLabel = days === 1 ? 'day' : 'days';
+            rate = RATES.daily[seatType] || 500;
+        } else if (bookingType === 'weekly') {
+            unitCount = weeks;
+            unitLabel = weeks === 1 ? 'week' : 'weeks';
+            rate = RATES.weekly[seatType] || 2500;
+        } else if (bookingType === 'monthly') {
+            unitCount = months;
+            unitLabel = months === 1 ? 'month' : 'months';
+            rate = RATES.monthly[seatType] || 8000;
+        }
+        
+        var total = 0, text = '';
+        if (bookingType === 'hourly') {
+            total = rate * totalHours;
+            text = totalHours.toFixed(1) + ' ' + unitLabel + ' × ₹' + rate + '/hour = ₹' + total.toFixed(2);
+        } else if (bookingType === 'daily') {
+            total = rate * days;
+            text = days + ' ' + unitLabel + ' × ₹' + rate + '/day = ₹' + total.toFixed(2);
+        } else if (bookingType === 'weekly') {
+            total = rate * weeks;
+            text = weeks.toFixed(1) + ' ' + unitLabel + ' × ₹' + rate + '/week = ₹' + total.toFixed(2);
+        } else if (bookingType === 'monthly') {
+            total = rate * months;
+            text = months + ' ' + unitLabel + ' × ₹' + rate + '/month = ₹' + total.toFixed(2);
+        }
+        
+        return { total: total, text: text };
+    }
+    
+    function updatePriceDisplay() {
+        var duration = getDurationDetails();
+        var customPrice = parseFloat(customPriceInput.value);
+        var isCustom = !isNaN(customPrice) && customPrice > 0;
+        
+        if (!duration) {
+            if (calculatedPriceInput) calculatedPriceInput.value = '₹0.00';
+            if (finalAmountSpan) finalAmountSpan.textContent = '₹0.00';
+            if (priceBreakdownSpan) priceBreakdownSpan.textContent = '';
+            if (priceNoteSpan) priceNoteSpan.innerHTML = '';
+            if (totalAmountHidden) totalAmountHidden.value = '';
+            return;
+        }
+        
+        calculatedPriceInput.value = '₹' + duration.total.toFixed(2);
+        priceBreakdownSpan.textContent = duration.text;
+        
+        var finalAmount = duration.total;
+        var note = '';
+        if (isCustom) {
+            finalAmount = customPrice;
+            note = '<i class="bi bi-star-fill text-warning"></i> Custom price applied (overrides calculated amount)';
+        }
+        finalAmountSpan.textContent = '₹' + finalAmount.toFixed(2);
+        priceNoteSpan.innerHTML = note;
+        totalAmountHidden.value = finalAmount;
+    }
+    
+    // ========== ATTACH EVENT LISTENERS ==========
+    function attachListeners() {
+        var elems = ['startDate', 'endDate', 'bookingTypeSelect',
+            'customStartHour', 'customStartMinute', 'customEndHour', 'customEndMinute',
+            'hoursPerDay', 'hoursPerDayMonthly'];
+        elems.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', function() { updateAvailableSeats(); updatePriceDisplay(); });
+                if (id.includes('Hour') || id.includes('Minute')) {
+                    el.addEventListener('input', function() { updateAvailableSeats(); updatePriceDisplay(); });
+                }
+            }
+        });
+        
+        document.querySelectorAll('.seat-type-card').forEach(function(c) {
+            c.addEventListener('click', function() { updateAvailableSeats(); updatePriceDisplay(); });
+        });
+        
+        dayCheckboxes.forEach(function(id) {
+            document.getElementById(id).addEventListener('change', updatePriceDisplay);
+        });
+        
+        if (customPriceInput) customPriceInput.addEventListener('input', updatePriceDisplay);
+        if (studySpaceSelect) studySpaceSelect.addEventListener('change', function() { updateAvailableSeats(); updatePriceDisplay(); });
+        
+        updatePriceDisplay();
+    }
+    
+    // ========== START THE FORM ==========
+    toggleBookingFields();
+    attachListeners();
+    
+    // ==================== TIME FIELD SYNC ====================
+    function syncTimeFields() {
+        var startHour = document.getElementById('customStartHour') ? document.getElementById('customStartHour').value : null;
+        var startMin = document.getElementById('customStartMinute') ? document.getElementById('customStartMinute').value : null;
+        var endHour = document.getElementById('customEndHour') ? document.getElementById('customEndHour').value : null;
+        var endMin = document.getElementById('customEndMinute') ? document.getElementById('customEndMinute').value : null;
+        
+        if (startHour && startMin) {
+            document.getElementById('hidden_custom_start_time').value = startHour.padStart(2, '0') + ':' + startMin.padStart(2, '0');
+        }
+        if (endHour && endMin) {
+            document.getElementById('hidden_custom_end_time').value = endHour.padStart(2, '0') + ':' + endMin.padStart(2, '0');
+        }
+    }
+    
+    // Add event listeners for time fields
+    ['customStartHour', 'customStartMinute', 'customEndHour', 'customEndMinute'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', syncTimeFields);
+            el.addEventListener('input', syncTimeFields);
+        }
+    });
+    
+    // Sync on form submit
+    var form = document.getElementById('enrollmentForm');
+    if (form) {
+        form.addEventListener('submit', syncTimeFields);
+    }
+    
+    // Initial sync
+    syncTimeFields();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block content %}
+
+{% if form.errors %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        Please fix the errors below.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endif %}
+
+<div class="shadow p-4 bg-white rounded mx-auto" style="max-width: 500px;">
+    
+    <h2 class="text-center mb-4">Register</h2>
+
+    <form method="POST" action="{% url 'user_management:register' %}">
+        {% csrf_token %} 
+
+        {% for field in form %}
+            <div class="mb-3">
+                
+                <!-- Label -->
+                <label class="form-label">{{ field.label }}</label>
+
+                <!-- Input -->
+                {{ field }}
+
+                <!-- ✅ Help text (Option 1 applied) -->
+                {% if field.help_text %}
+                    <div class="form-text small text-muted">
+                        {{ field.help_text }}
+                    </div>
+                {% endif %}
+
+                <!-- Errors -->
+                {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+        {% endfor %}
+
+        <div class="d-grid mt-3">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

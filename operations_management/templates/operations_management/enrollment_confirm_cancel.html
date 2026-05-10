@@ -1,0 +1,135 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Cancel Enrollment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Cancel Enrollment
+                    </h3>
+                </div>
+                <div class="card-body text-center p-4">
+                    
+                    <!-- Warning Icon -->
+                    <div class="mb-4">
+                        <i class="bi bi-x-octagon fs-1 text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h4 class="mb-3">Are you sure you want to cancel this enrollment?</h4>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The seat will become available for other students.
+                    </div>
+                    
+                    <!-- Enrollment Summary -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <strong>Enrollment Summary</strong>
+                        </div>
+                        <div class="card-body text-start">
+                            <p class="mb-2">
+                                <strong><i class="bi bi-person"></i> Student:</strong> 
+                                {{ enrollment.student.name }} ({{ enrollment.student.mobile }})
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="bi bi-building"></i> Study Space:</strong> 
+                                {{ enrollment.study_space.name }}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="bi bi-chair"></i> Seat:</strong> 
+                                {% if enrollment.seat %}
+                                    {{ enrollment.seat.seat_number }} ({{ enrollment.seat.get_seat_type_display }})
+                                {% else %}
+                                    Not assigned
+                                {% endif %}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="bi bi-calendar-check"></i> Booking Type:</strong> 
+                                {{ enrollment.get_booking_type_display }}
+                            </p>
+                            
+                            {% if enrollment.booking_type == 'hourly' %}
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-clock"></i> Time:</strong>
+                                    {% if enrollment.time_slot %}
+                                        {{ enrollment.time_slot.get_start_time_display }} - {{ enrollment.time_slot.get_end_time_display }}
+                                        ({{ enrollment.time_slot.get_duration_display }})
+                                    {% else %}
+                                        {{ enrollment.custom_start_time|time:"h:i A" }} - {{ enrollment.custom_end_time|time:"h:i A" }}
+                                    {% endif %}
+                                </p>
+                            {% elif enrollment.booking_type == 'weekly' %}
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-hourglass-split"></i> Hours/Day:</strong> 
+                                    {{ enrollment.hours_per_day }} hours
+                                </p>
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-calendar-week"></i> Days:</strong> 
+                                    {% with days=enrollment.days_of_week|stringformat:"s" %}
+                                        {% if "0" in days %}Mon {% endif %}
+                                        {% if "1" in days %}Tue {% endif %}
+                                        {% if "2" in days %}Wed {% endif %}
+                                        {% if "3" in days %}Thu {% endif %}
+                                        {% if "4" in days %}Fri {% endif %}
+                                        {% if "5" in days %}Sat {% endif %}
+                                        {% if "6" in days %}Sun {% endif %}
+                                    {% endwith %}
+                                </p>
+                            {% elif enrollment.booking_type == 'monthly' %}
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-hourglass-split"></i> Hours/Day:</strong> 
+                                    {{ enrollment.hours_per_day }} hours
+                                </p>
+                            {% endif %}
+                            
+                            <p class="mb-2">
+                                <strong><i class="bi bi-calendar"></i> Period:</strong> 
+                                {{ enrollment.start_date|date:"d M Y" }} - {{ enrollment.end_date|date:"d M Y" }}
+                            </p>
+                            <p class="mb-0">
+                                <strong><i class="bi bi-currency-rupee"></i> Total Amount:</strong> 
+                                ₹{{ enrollment.total_amount|default:"0.00" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Status Warning -->
+                    {% if enrollment.is_paid %}
+                    <div class="alert alert-danger mb-4">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Important:</strong> This enrollment has been paid. Cancelling will require a refund.
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'operations_management:enrollment_detail' enrollment.id %}" 
+                               class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> No, Go Back
+                            </a>
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="bi bi-check-circle"></i> Yes, Cancel Enrollment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn {
+        transition: all 0.2s ease;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

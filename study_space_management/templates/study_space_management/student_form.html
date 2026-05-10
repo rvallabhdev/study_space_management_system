@@ -1,0 +1,359 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}
+    {% if student %}Edit Student{% else %}Add New Student{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-body-secondary text-black">
+                    <h3 class="mb-0">
+                        {% if student %}
+                            Edit Student: {{ student.name }}
+                        {% else %}
+                            Add New Student
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Display non-field errors (if any) -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Two Column Layout -->
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3 text-primary">Personal Information</h5>
+                                
+                                <!-- Name -->
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        {{ form.name.label }}
+                                        {% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.help_text %}
+                                        <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.name.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Mobile -->
+                                <div class="mb-3">
+                                    <label for="{{ form.mobile.id_for_label }}" class="form-label">
+                                        {{ form.mobile.label }}
+                                        {% if form.mobile.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.mobile }}
+                                    {% if form.mobile.help_text %}
+                                        <small class="form-text text-muted">{{ form.mobile.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.mobile.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.mobile.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Aadhaar Number -->
+                                <div class="mb-3">
+                                    <label for="{{ form.aadhaar_number.id_for_label }}" class="form-label">
+                                        {{ form.aadhaar_number.label }}
+                                        {% if form.aadhaar_number.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.aadhaar_number }}
+                                    {% if form.aadhaar_number.help_text %}
+                                        <small class="form-text text-muted">{{ form.aadhaar_number.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.aadhaar_number.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.aadhaar_number.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Father's Name -->
+                                <div class="mb-3">
+                                    <label for="{{ form.father_name.id_for_label }}" class="form-label">
+                                        {{ form.father_name.label }}
+                                        {% if form.father_name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.father_name }}
+                                    {% if form.father_name.help_text %}
+                                        <small class="form-text text-muted">{{ form.father_name.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.father_name.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.father_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Father's Mobile -->
+                                <div class="mb-3">
+                                    <label for="{{ form.father_mobile.id_for_label }}" class="form-label">
+                                        {{ form.father_mobile.label }}
+                                        {% if form.father_mobile.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.father_mobile }}
+                                    {% if form.father_mobile.help_text %}
+                                        <small class="form-text text-muted">{{ form.father_mobile.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.father_mobile.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.father_mobile.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Date of Joining -->
+                                <div class="mb-3">
+                                    <label for="{{ form.date_of_joining.id_for_label }}" class="form-label">
+                                        {{ form.date_of_joining.label }}
+                                        {% if form.date_of_joining.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.date_of_joining }}
+                                    {% if form.date_of_joining.help_text %}
+                                        <small class="form-text text-muted">{{ form.date_of_joining.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.date_of_joining.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.date_of_joining.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3 text-primary">Educational & Document Information</h5>
+                                
+                                <!-- Course Name -->
+                                <div class="mb-3">
+                                    <label for="{{ form.course_name.id_for_label }}" class="form-label">
+                                        {{ form.course_name.label }}
+                                        {% if form.course_name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.course_name }}
+                                    {% if form.course_name.help_text %}
+                                        <small class="form-text text-muted">{{ form.course_name.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.course_name.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.course_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Institute Name -->
+                                <div class="mb-3">
+                                    <label for="{{ form.institute_name.id_for_label }}" class="form-label">
+                                        {{ form.institute_name.label }}
+                                        {% if form.institute_name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.institute_name }}
+                                    {% if form.institute_name.help_text %}
+                                        <small class="form-text text-muted">{{ form.institute_name.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.institute_name.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.institute_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Student Image -->
+                                <div class="mb-3">
+                                    <label for="{{ form.student_image.id_for_label }}" class="form-label">
+                                        {{ form.student_image.label }}
+                                    </label>
+                                    {{ form.student_image }}
+                                    {% if form.student_image.help_text %}
+                                        <small class="form-text text-muted">{{ form.student_image.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.student_image.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.student_image.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if student and student.student_image %}
+                                        <div class="mt-2">
+                                            <img src="{{ student.student_image.url }}" 
+                                                 style="height: 80px; width: 80px; object-fit: cover;" 
+                                                 class="rounded">
+                                            <small class="text-muted">Current photo</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Aadhaar Front -->
+                                <div class="mb-3">
+                                    <label for="{{ form.aadhaar_front.id_for_label }}" class="form-label">
+                                        {{ form.aadhaar_front.label }}
+                                    </label>
+                                    {{ form.aadhaar_front }}
+                                    {% if form.aadhaar_front.help_text %}
+                                        <small class="form-text text-muted">{{ form.aadhaar_front.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.aadhaar_front.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.aadhaar_front.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if student and student.aadhaar_front %}
+                                        <div class="mt-2">
+                                            <a href="{{ student.aadhaar_front.url }}" target="_blank" class="btn btn-sm btn-link">
+                                                View current front image
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Aadhaar Back -->
+                                <div class="mb-3">
+                                    <label for="{{ form.aadhaar_back.id_for_label }}" class="form-label">
+                                        {{ form.aadhaar_back.label }}
+                                    </label>
+                                    {{ form.aadhaar_back }}
+                                    {% if form.aadhaar_back.help_text %}
+                                        <small class="form-text text-muted">{{ form.aadhaar_back.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.aadhaar_back.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.aadhaar_back.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if student and student.aadhaar_back %}
+                                        <div class="mt-2">
+                                            <a href="{{ student.aadhaar_back.url }}" target="_blank" class="btn btn-sm btn-link">
+                                                View current back image
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Address Section (Full Width) -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h5 class="mb-3 text-primary">Address Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Permanent Address -->
+                                <div class="mb-3">
+                                    <label for="{{ form.permanent_address.id_for_label }}" class="form-label">
+                                        {{ form.permanent_address.label }}
+                                        {% if form.permanent_address.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.permanent_address }}
+                                    {% if form.permanent_address.help_text %}
+                                        <small class="form-text text-muted">{{ form.permanent_address.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.permanent_address.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.permanent_address.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Local Address -->
+                                <div class="mb-3">
+                                    <label for="{{ form.local_address.id_for_label }}" class="form-label">
+                                        {{ form.local_address.label }}
+                                        {% if form.local_address.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.local_address }}
+                                    {% if form.local_address.help_text %}
+                                        <small class="form-text text-muted">{{ form.local_address.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.local_address.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.local_address.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Active Status (Full Width) -->
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="mb-3 form-check">
+                                    {{ form.active }}
+                                    <label for="{{ form.active.id_for_label }}" class="form-check-label">
+                                        {{ form.active.label }}
+                                    </label>
+                                    {% if form.active.help_text %}
+                                        <small class="form-text text-muted d-block">{{ form.active.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.active.errors %}
+                                        <div class="alert alert-danger mt-1">
+                                            {% for error in form.active.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form buttons -->
+                        <div class="d-flex justify-content-center mt-2 gap-5">
+                            <a href="{% url 'study_space_management:student_list' %}" class="btn btn-secondary w-auto px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success w-auto px-4">
+                                {% if student %}Update{% else %}Save{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize date picker if you have one
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr("#id_date_of_joining", {
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            altInput: true,
+            altFormat: "F j, Y",
+            allowInput: true
+        });
+    }
+    
+    // Optional: Add preview for student image when selected
+    document.getElementById('id_student_image')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.querySelector('#id_student_image + .mt-2 img');
+                if (preview) {
+                    preview.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

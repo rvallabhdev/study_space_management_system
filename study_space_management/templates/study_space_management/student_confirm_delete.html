@@ -1,0 +1,58 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Delete Student{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        {% if student.student_image %}
+                            <img src="{{ student.student_image.url }}" 
+                                 class="rounded-circle mb-3" 
+                                 alt="{{ student.name }}"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-person-circle" style="font-size: 5rem;"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <h4>Are you sure you want to delete "{{ student.name }}"?</h4>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Warning:</strong> This action will deactivate the student record. 
+                        All associated enrollments and payments will be preserved but marked as inactive.
+                    </div>
+                    
+                    <p class="text-muted">
+                        <strong>Student ID:</strong> {{ student.id }}<br>
+                        <strong>Mobile:</strong> {{ student.mobile }}<br>
+                        <strong>Course:</strong> {{ student.course_name }}
+                    </p>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'study_space_management:student_detail' student.id %}" 
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-circle"></i> Yes, Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

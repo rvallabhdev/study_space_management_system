@@ -1,0 +1,22 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block content %}
+    <center>
+        <h1>Login</h1>
+    </center>
+        <br/><br/>
+            <form method="POST" action="{% url 'user_management:login' %}">
+                {% csrf_token %} 
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" name="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+{% endblock %}

@@ -1,0 +1,169 @@
+study_space_management_system/          # Project Root
+│
+├── manage.py
+├── db.sqlite3
+├── requirements.txt
+│
+├── study_space_management_system/      # Project Config Folder
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+│
+├── templates/                          # Project-level templates
+│   ├── base.html
+│   ├── components/
+│   │   ├── navbar.html
+│   │   ├── sidebar.html
+│   │   └── alerts.html
+│   └── includes/
+│       └── pagination.html
+│
+├── static/                             # Static files
+│   ├── css/
+│   │   └── custom.css
+│   └── js/
+│       └── main.js
+│
+├── media/                              # Uploaded files (created automatically)
+│   └── students/
+│       └── [student_name]_[date]/
+│           ├── [student_name]_image.jpg
+│           ├── [student_name]_aadhaar_front.jpg
+│           └── [student_name]_aadhaar_back.jpg
+│
+├── user_management/                    # App 1: Authentication
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py                       # No models (using Django's User)
+│   ├── views.py
+│   │   ├── login_view
+│   │   ├── logout_view
+│   │   ├── register_view
+│   │   └── profile_view
+│   ├── urls.py
+│   │   ├── '' → login_view
+│   │   ├── 'register/' → register_view
+│   │   ├── 'logout/' → logout_view
+│   │   └── 'profile/' → profile_view
+│   ├── forms.py
+│   │   ├── LoginForm
+│   │   └── RegistrationForm
+│   └── templates/
+│       └── user_management/
+│           ├── login.html
+│           ├── register.html
+│           └── profile.html
+│
+├── study_space_management/             # App 2: Core Study Space Management
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   │   ├── Student
+│   │   ├── StudySpace
+│   │   ├── Seat
+│   │   └── TimeSlot
+│   ├── views.py
+│   │   ├── dashboard_view
+│   │   ├── student_list_view
+│   │   ├── student_detail_view
+│   │   ├── student_create_view
+│   │   ├── student_edit_view
+│   │   ├── student_delete_view
+│   │   ├── student_search_view
+│   │   ├── study_space_list_view
+│   │   ├── study_space_detail_view
+│   │   └── seat_availability_view
+│   ├── urls.py
+│   │   ├── '' → dashboard_view
+│   │   ├── 'students/' → student_list_view
+│   │   ├── 'students/add/' → student_create_view
+│   │   ├── 'students/<int:pk>/' → student_detail_view
+│   │   ├── 'students/<int:pk>/edit/' → student_edit_view
+│   │   ├── 'students/<int:pk>/delete/' → student_delete_view
+│   │   ├── 'students/search/' → student_search_view
+│   │   ├── 'spaces/' → study_space_list_view
+│   │   ├── 'spaces/<int:pk>/' → study_space_detail_view
+│   │   └── 'seats/availability/' → seat_availability_view
+│   ├── forms.py
+│   │   ├── StudentForm
+│   │   ├── StudySpaceForm
+│   │   └── TimeSlotForm
+│   └── templates/
+│       └── study_space_management/
+│           ├── dashboard.html
+│           ├── student_list.html
+│           ├── student_detail.html
+│           ├── student_form.html
+│           ├── student_confirm_delete.html
+│           ├── study_space_list.html
+│           ├── study_space_detail.html
+│           └── seat_availability.html
+│
+├── operations_management/              # App 3: Enrollment, Payments, Pricing
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   │   ├── Pricing
+│   │   ├── Enrollment
+│   │   └── Payment
+│   ├── views.py
+│   │   ├── enrollment_list_view
+│   │   ├── enrollment_create_view
+│   │   ├── enrollment_detail_view
+│   │   ├── enrollment_edit_view
+│   │   ├── enrollment_cancel_view
+│   │   ├── payment_list_view
+│   │   ├── payment_create_view
+│   │   ├── payment_receipt_view
+│   │   ├── payment_reminder_view
+│   │   ├── pending_payments_view
+│   │   ├── pricing_list_view
+│   │   ├── pricing_create_view
+│   │   ├── pricing_edit_view
+│   │   └── export_data_view
+│   ├── urls.py
+│   │   ├── 'enrollments/' → enrollment_list_view
+│   │   ├── 'enrollments/add/' → enrollment_create_view
+│   │   ├── 'enrollments/<int:pk>/' → enrollment_detail_view
+│   │   ├── 'enrollments/<int:pk>/edit/' → enrollment_edit_view
+│   │   ├── 'enrollments/<int:pk>/cancel/' → enrollment_cancel_view
+│   │   ├── 'payments/' → payment_list_view
+│   │   ├── 'payments/add/' → payment_create_view
+│   │   ├── 'payments/<int:pk>/receipt/' → payment_receipt_view
+│   │   ├── 'payments/reminders/' → payment_reminder_view
+│   │   ├── 'payments/pending/' → pending_payments_view
+│   │   ├── 'pricing/' → pricing_list_view
+│   │   ├── 'pricing/add/' → pricing_create_view
+│   │   ├── 'pricing/<int:pk>/edit/' → pricing_edit_view
+│   │   └── 'export/' → export_data_view
+│   ├── forms.py
+│   │   ├── EnrollmentForm
+│   │   ├── PaymentForm
+│   │   ├── PricingForm
+│   │   └── PaymentReminderForm
+│   ├── utils.py                         # Business logic helpers
+│   │   ├── calculate_amount()
+│   │   ├── get_available_seats()
+│   │   ├── calculate_payment_status()
+│   │   └── generate_receipt_number()
+│   └── templates/
+│       └── operations_management/
+│           ├── enrollment_list.html
+│           ├── enrollment_form.html
+│           ├── enrollment_detail.html
+│           ├── enrollment_confirm_cancel.html
+│           ├── payment_list.html
+│           ├── payment_form.html
+│           ├── payment_receipt.html
+│           ├── payment_reminder.html
+│           ├── pending_payments.html
+│           ├── pricing_list.html
+│           ├── pricing_form.html
+│           └── export.html
+│
+└── requirements.txt

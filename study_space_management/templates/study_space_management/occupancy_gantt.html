@@ -1,0 +1,514 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Occupancy Gantt Chart{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<style>
+    .occupancy-container {
+        overflow-x: auto;
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        background: white;
+    }
+    .occupancy-table {
+        border-collapse: collapse;
+        min-width: 100%;
+        font-size: 0.8rem;
+    }
+    .occupancy-table thead th {
+        position: sticky;
+        top: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        z-index: 10;
+        padding: 10px 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-weight: 600;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .occupancy-table td:first-child,
+    .occupancy-table th:first-child {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 5;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    .occupancy-table th:first-child {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 15;
+    }
+    .occupancy-table td {
+        border: 1px solid #dee2e6;
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .seat-cell {
+        padding: 8px;
+        white-space: nowrap;
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .time-slot-cell {
+        width: 50px;
+        height: 50px;
+        transition: all 0.2s;
+    }
+    .time-slot-cell:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 2px #667eea;
+        z-index: 2;
+        position: relative;
+    }
+    .cell-occupied { background-color: #28a745; }
+    .cell-available { background-color: #f8f9fa; }
+    .cell-occupied i { color: white; }
+    .cell-available i { color: #adb5bd; }
+    .summary-row td {
+        background-color: #e9ecef;
+        font-weight: bold;
+        text-align: center;
+    }
+    .filter-card {
+        background: white;
+        border: none;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    }
+    .sort-badge {
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s;
+    }
+    .sort-badge:hover {
+        background-color: #e9ecef;
+    }
+    .sort-badge.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .tooltip-custom {
+        position: absolute;
+        background: rgba(0,0,0,0.85);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        pointer-events: none;
+        z-index: 1000;
+        white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+    @media (max-width: 768px) {
+        .time-slot-cell {
+            width: 40px;
+            height: 40px;
+        }
+        .occupancy-table {
+            font-size: 0.7rem;
+        }
+        .seat-cell {
+            padding: 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6 mb-0">
+                <i class="bi bi-calendar-week text-primary"></i> Occupancy Gantt Chart
+            </h1>
+            <p class="text-muted mt-2">Seat occupancy matrix – 30‑minute time slots</p>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="bi bi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card filter-card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold"><i class="bi bi-building"></i> Study Space</label>
+                    <select id="studySpaceSelect" class="form-select">
+                        <option value="">-- Select a space --</option>
+                        {% for space in study_spaces %}
+                            <option value="{{ space.id }}" {% if space.id == default_space_id %}selected{% endif %}>
+                                {{ space.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold"><i class="bi bi-calendar"></i> Date</label>
+                    <input type="text" id="datePicker" class="form-control" value="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold"><i class="bi bi-tag"></i> Booking Type</label>
+                    <select id="bookingTypeSelect" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in booking_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold"><i class="bi bi-check-circle"></i> Payment Status</label>
+                    <select id="paymentStatusSelect" class="form-select">
+                        <option value="">All</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold"><i class="bi bi-funnel"></i> Seat Occupancy</label>
+                    <select id="occupancyFilterSelect" class="form-select">
+                        <option value="all">All Seats</option>
+                        <option value="occupied">Show Only Occupied Seats</option>
+                        <option value="vacant">Show Only Vacant Seats</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between gap-2">
+                        <button id="loadBtn" class="btn btn-primary px-4">
+                            <i class="bi bi-eye"></i> Load Occupancy
+                        </button>
+                        <button id="resetBtn" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-arrow-repeat"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Sorting controls -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold"><i class="bi bi-sort-numeric-down"></i> Sort Seats By</label>
+                    <div class="d-flex gap-2">
+                        <span class="sort-badge" data-sort="number">Seat Number</span>
+                        <span class="sort-badge" data-sort="occupied-desc">Most Occupied First</span>
+                        <span class="sort-badge" data-sort="occupied-asc">Least Occupied First</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex gap-4 flex-wrap align-items-center">
+                <div><span class="badge p-2 me-1" style="background-color: #28a745;"></span> Occupied</div>
+                <div><span class="badge p-2 me-1" style="background-color: #f8f9fa; border:1px solid #dee2e6;"></span> Available</div>
+                <div><i class="bi bi-info-circle"></i> Click any cell for details</div>
+                <div><i class="bi bi-eye"></i> Hover for tooltip</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Occupancy Matrix Container -->
+    <div id="occupancyContainer">
+        <div class="alert alert-info text-center">
+            Select a study space and click "Load Occupancy".
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Initialize date picker
+    flatpickr("#datePicker", {
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        altInput: true,
+        altFormat: "F j, Y",
+        allowInput: true
+    });
+
+    const studySpaceSelect = document.getElementById('studySpaceSelect');
+    const datePicker = document.getElementById('datePicker');
+    const bookingTypeSelect = document.getElementById('bookingTypeSelect');
+    const paymentStatusSelect = document.getElementById('paymentStatusSelect');
+    const occupancyFilterSelect = document.getElementById('occupancyFilterSelect');
+    const loadBtn = document.getElementById('loadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const occupancyContainer = document.getElementById('occupancyContainer');
+
+    // Sorting controls (client-side, applied after data loads)
+    let currentOccupancyData = null; // will store the last loaded data for sorting
+
+    function renderMatrix(data) {
+        // data = { space_name, location, date, time_slots, seats, ... }
+        if (!data || !data.seats || data.seats.length === 0) {
+            occupancyContainer.innerHTML = '<div class="alert alert-info">No occupancy data for this selection.</div>';
+            return;
+        }
+
+        const timeSlots = data.time_slots; // array of { time_label }
+        const seats = data.seats;
+
+        // Build HTML table
+        let html = `
+        <div class="card shadow-sm mb-5">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-building"></i> ${escapeHtml(data.space_name)}
+                        <small class="ms-2 fs-6">${escapeHtml(data.location || '')}</small>
+                    </h4>
+                    <div>
+                        <span class="badge bg-light text-dark me-2"><i class="bi bi-grid-3x3-gap-fill"></i> ${data.total_seats} Seats</span>
+                        <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i> ${data.available_seats} Available</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-person-fill"></i> ${data.occupied_seats} Occupied</span>
+                    </div>
+                </div>
+                <small class="text-light">${data.date}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="occupancy-container">
+                    <table class="occupancy-table" id="occupancyTable">
+                        <thead>
+                            <tr>
+                                <th>Seat</th>
+                                ${timeSlots.map(slot => `<th class="text-center">${escapeHtml(slot.time_label)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        seats.forEach(seat => {
+            html += `<tr data-seat-id="${seat.id}" data-occupied-count="${seat.occupied_count}">
+                        <td class="seat-cell">
+                            <div class="d-flex flex-column">
+                                <strong>${escapeHtml(seat.seat_number)}</strong>
+                                <small class="text-muted">${escapeHtml(seat.seat_type_display)}</small>
+                                <span class="badge bg-secondary mt-1 occupancy-badge">${seat.occupied_count} occupied</span>
+                            </div>
+                        </td>`;
+            seat.slots.forEach(slot => {
+                const occupiedClass = slot.occupied ? 'cell-occupied' : 'cell-available';
+                const icon = slot.occupied ? '<i class="bi bi-person-fill"></i>' : '<i class="bi bi-check-circle"></i>';
+                html += `<td class="time-slot-cell ${occupiedClass}"
+                            data-student="${escapeHtml(slot.student || '')}"
+                            data-type="${escapeHtml(slot.type || '')}"
+                            data-time="${escapeHtml(slot.time_label)}"
+                            data-occupied="${slot.occupied}">
+                            ${icon}
+                        </td>`;
+            });
+            html += `</tr>`;
+        });
+
+        // Summary row
+        html += `</tbody><tfoot><tr class="summary-row"><td><strong>Occupied</strong></td>`;
+        for (let i = 0; i < timeSlots.length; i++) {
+            html += `<td class="text-center"><span class="badge bg-secondary">0</span></td>`;
+        }
+        html += `</tr></tfoot></table></div></div></div>`;
+        occupancyContainer.innerHTML = html;
+
+        // After rendering, attach event listeners and update summary
+        attachCellEvents();
+        updateSummaryRow();
+        currentOccupancyData = data;
+        // Apply current client-side filters (occupancy and sorting)
+        applyOccupancyFilter();
+        applySorting();
+    }
+
+    function updateSummaryRow() {
+        const table = document.querySelector('#occupancyTable');
+        if (!table) return;
+        const timeSlots = table.querySelectorAll('thead th').length - 1;
+        const rows = table.querySelectorAll('tbody tr');
+        const occupiedCounts = new Array(timeSlots).fill(0);
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td.time-slot-cell');
+            cells.forEach((cell, idx) => {
+                if (cell.getAttribute('data-occupied') === 'true') {
+                    occupiedCounts[idx]++;
+                }
+            });
+        });
+        const summaryCells = table.querySelectorAll('tfoot tr td');
+        for (let i = 0; i < timeSlots; i++) {
+            summaryCells[i+1].innerHTML = `<span class="badge bg-secondary">${occupiedCounts[i]}</span>`;
+        }
+    }
+
+    function attachCellEvents() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip-custom';
+        tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+
+        const cells = document.querySelectorAll('.time-slot-cell');
+        cells.forEach(cell => {
+            cell.addEventListener('mouseenter', function(e) {
+                const student = this.getAttribute('data-student');
+                const type = this.getAttribute('data-type');
+                const time = this.getAttribute('data-time');
+                if (student && type) {
+                    tooltip.innerHTML = `<strong>${escapeHtml(student)}</strong><br>${escapeHtml(type)} booking<br>${escapeHtml(time)}`;
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                }
+            });
+            cell.addEventListener('mousemove', function(e) {
+                if (tooltip.style.display === 'block') {
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                }
+            });
+            cell.addEventListener('mouseleave', function() {
+                tooltip.style.display = 'none';
+            });
+            cell.addEventListener('click', function() {
+                const student = this.getAttribute('data-student');
+                const type = this.getAttribute('data-type');
+                const time = this.getAttribute('data-time');
+                if (student && type) {
+                    alert(`Booked by: ${student}\nBooking type: ${type}\nTime: ${time}`);
+                } else {
+                    alert(`Available seat at ${time}`);
+                }
+            });
+        });
+    }
+
+    function applyOccupancyFilter() {
+        const filterValue = occupancyFilterSelect.value;
+        const rows = document.querySelectorAll('#occupancyTable tbody tr');
+        rows.forEach(row => {
+            const occupiedCount = parseInt(row.getAttribute('data-occupied-count') || 0);
+            if (filterValue === 'occupied') {
+                row.style.display = occupiedCount > 0 ? '' : 'none';
+            } else if (filterValue === 'vacant') {
+                row.style.display = occupiedCount === 0 ? '' : 'none';
+            } else {
+                row.style.display = '';
+            }
+        });
+        updateSummaryRow(); // summary based on visible rows? We'll keep full summary, but could also filter. User preference.
+    }
+
+    function applySorting() {
+        const activeSort = document.querySelector('.sort-badge.active');
+        if (!activeSort) return;
+        const sortKey = activeSort.getAttribute('data-sort');
+        const table = document.querySelector('#occupancyTable');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+            let valA, valB;
+            if (sortKey === 'number') {
+                const numA = a.querySelector('.seat-cell strong').innerText.match(/\d+/);
+                const numB = b.querySelector('.seat-cell strong').innerText.match(/\d+/);
+                valA = numA ? parseInt(numA[0]) : 0;
+                valB = numB ? parseInt(numB[0]) : 0;
+            } else if (sortKey === 'occupied-desc') {
+                valA = parseInt(a.getAttribute('data-occupied-count') || 0);
+                valB = parseInt(b.getAttribute('data-occupied-count') || 0);
+                return valB - valA;
+            } else if (sortKey === 'occupied-asc') {
+                valA = parseInt(a.getAttribute('data-occupied-count') || 0);
+                valB = parseInt(b.getAttribute('data-occupied-count') || 0);
+                return valA - valB;
+            }
+            return valA - valB;
+        });
+        rows.forEach(row => tbody.appendChild(row));
+        // Update summary after sorting? Row order doesn't affect summary.
+    }
+
+    function loadOccupancy() {
+        const spaceId = studySpaceSelect.value;
+        if (!spaceId) {
+            occupancyContainer.innerHTML = '<div class="alert alert-warning">Please select a study space.</div>';
+            return;
+        }
+        const date = datePicker.value;
+        const bookingType = bookingTypeSelect.value;
+        const paymentStatus = paymentStatusSelect.value;
+
+        // Show loading spinner
+        occupancyContainer.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p>Loading occupancy data...</p></div>';
+        document.querySelector('.loading-spinner').style.display = 'block';
+
+        const url = `/api/occupancy-data/?study_space=${spaceId}&date=${date}&booking_type=${bookingType}&payment_status=${paymentStatus}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                renderMatrix(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                occupancyContainer.innerHTML = '<div class="alert alert-danger">Error loading occupancy data. Please try again.</div>';
+            });
+    }
+
+    function resetFilters() {
+        studySpaceSelect.value = '';
+        datePicker.value = new Date().toISOString().slice(0,10);
+        bookingTypeSelect.value = '';
+        paymentStatusSelect.value = '';
+        occupancyFilterSelect.value = 'all';
+        // Clear sorting active class to default (seat number)
+        document.querySelectorAll('.sort-badge').forEach(btn => btn.classList.remove('active'));
+        const defaultSort = document.querySelector('.sort-badge[data-sort="number"]');
+        if (defaultSort) defaultSort.classList.add('active');
+        occupancyContainer.innerHTML = '<div class="alert alert-info">Select a study space and click "Load Occupancy".</div>';
+    }
+
+    function attachSortListeners() {
+        const sortBtns = document.querySelectorAll('.sort-badge');
+        sortBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                sortBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                if (currentOccupancyData) {
+                    applySorting();
+                }
+            });
+        });
+    }
+
+    // Helper to escape HTML to prevent injection
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Initial attach of sort listeners (they exist already)
+    attachSortListeners();
+    // When occupancy filter changes, re-apply filter
+    occupancyFilterSelect.addEventListener('change', applyOccupancyFilter);
+    loadBtn.addEventListener('click', loadOccupancy);
+    resetBtn.addEventListener('click', resetFilters);
+</script>
+{% endblock %}

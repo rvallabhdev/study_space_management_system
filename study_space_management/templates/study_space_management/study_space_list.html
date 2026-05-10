@@ -1,0 +1,364 @@
+{% extends 'study_space_management_system/base.html' %}
+{% load static %}
+
+{% block title %}Study Spaces - Space Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- ==================== HEADER SECTION ==================== -->
+    <!-- This section shows the page title and add button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6 mb-0">
+                <i class="bi bi-building text-primary"></i> Study Spaces
+            </h1>
+            <p class="text-muted mt-2">Manage all study spaces and their seating arrangements</p>
+        </div>
+        <div>
+            <!-- Button to create a new study space -->
+            <a href="{% url 'study_space_management:study_space_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Study Space
+            </a>
+        </div>
+    </div>
+
+    <!-- ==================== STATISTICS CARDS ==================== -->
+    <!-- These 4 cards show overall statistics of all study spaces -->
+    <div class="row mb-4">
+        <!-- Card 1: Total number of study spaces -->
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Spaces</h6>
+                            <h2 class="mb-0">{{ total_spaces }}</h2>
+                        </div>
+                        <i class="bi bi-building fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 2: Number of active study spaces (is_active = True) -->
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Active Spaces</h6>
+                            <h2 class="mb-0">{{ active_spaces }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 3: Total number of seats across all study spaces -->
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Seats</h6>
+                            <h2 class="mb-0">{{ total_seats }}</h2>
+                        </div>
+                        <i class="bi bi-grid-3x3-gap-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 4: Number of active/working seats across all study spaces -->
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Active Seats</h6>
+                            <h2 class="mb-0">{{ active_seats }}</h2>
+                        </div>
+                        <i class="bi bi-bar-chart fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SEARCH AND FILTER SECTION ==================== -->
+    <!-- Users can search by name/location and filter by status and category -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <!-- Search input field -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Search by name or location..."
+                               value="{{ search_query|default:'' }}">
+                    </div>
+                </div>
+                
+                <!-- Status filter dropdown (Active/Inactive) -->
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                
+                <!-- Category filter dropdown (Standard/Air Conditioned) -->
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">Any Category</option>
+                        <option value="standard" {% if category_filter == 'standard' %}selected{% endif %}>Standard Desk</option>
+                        <option value="air_conditioned" {% if category_filter == 'air_conditioned' %}selected{% endif %}>Air Conditioned Desk</option>
+                    </select>
+                </div>
+                
+                <!-- Filter button -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Clear Filters Button - Only appears when any filter is active -->
+            {% if search_query or status_filter or category_filter %}
+            <div class="mt-3 text-end">
+                <a href="{% url 'study_space_management:study_space_list' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Clear All Filters
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ==================== ACTIVE FILTERS DISPLAY ==================== -->
+    <!-- Shows which filters are currently applied -->
+    {% if search_query or status_filter or category_filter %}
+    <div class="alert alert-info mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-funnel"></i> Active Filters:
+            {% if search_query %}
+                <span class="badge bg-primary">Search: "{{ search_query }}"</span>
+            {% endif %}
+            {% if status_filter %}
+                <span class="badge bg-primary">Status: {{ status_filter|title }}</span>
+            {% endif %}
+            {% if category_filter %}
+                <span class="badge bg-primary">Category: {{ category_filter|title }}</span>
+            {% endif %}
+            <span class="ms-2">({{ total_spaces }} space{{ total_spaces|pluralize }} found)</span>
+        </div>
+        <div>
+            <a href="{% url 'study_space_management:study_space_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Clear All Filters
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ==================== STUDY SPACES GRID ==================== -->
+    <!-- Displays all study spaces in a responsive card grid -->
+    <div class="row">
+        {% if study_spaces %}
+            {% for space in study_spaces %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm hover-shadow transition border-0 {% if not space.is_active %}opacity-75{% endif %}">
+                    
+                    <!-- Card Header - Simple colors to avoid CSS issues -->
+                    <div class="card-header {% if space.is_active %}bg-primary{% else %}bg-secondary{% endif %} text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-building"></i> {{ space.name }}
+                            </h5>
+                            {% if space.is_active %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-check-circle-fill text-success"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-dark">
+                                    <i class="bi bi-x-circle-fill"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Location -->
+                        {% if space.location %}
+                            <p class="mb-2">
+                                <i class="bi bi-geo-alt {% if not space.is_active %}text-muted{% else %}text-secondary{% endif %}"></i>
+                                <small class="text-muted">
+                                    {{ space.location }}
+                                </small>
+                            </p>
+                        {% endif %}
+                        
+                        <!-- ========== PROGRESS BAR - CHANGES BASED ON ACTIVE STATUS ========== -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="{% if not space.is_active %}text-muted{% endif %}">
+                                    <i class="bi bi-people"></i> Utilization
+                                </small>
+                                <small class="fw-bold">
+                                    {% if space.is_active %}
+                                        {{ space.active_seats }} / {{ space.capacity }} seats active
+                                    {% else %}
+                                        <span class="text-muted">Space Inactive</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                {% if space.is_active %}
+                                    {% with utilization=space.active_seats|default:0 %}
+                                        {% widthratio utilization space.capacity 100 as percentage %}
+                                        <div class="progress-bar 
+                                            {% if percentage == 0 %}bg-danger
+                                            {% elif percentage < 30 %}bg-danger
+                                            {% elif percentage < 60 %}bg-warning
+                                            {% elif percentage < 80 %}bg-info
+                                            {% else %}bg-success{% endif %}" 
+                                            style="width: 0%;"
+                                            data-width="{{ percentage }}">
+                                        </div>
+                                    {% endwith %}
+                                {% else %}
+                                    <!-- Full grey progress bar for inactive spaces -->
+                                    <div class="progress-bar bg-secondary" style="width: 0%;" data-width="100">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Warning messages for active spaces -->
+                            {% if space.is_active %}
+                                {% if space.active_seats == 0 %}
+                                    <small class="text-danger d-block mt-1">
+                                        <i class="bi bi-exclamation-triangle"></i> No active seats! Add seats to this space.
+                                    </small>
+                                {% elif space.active_seats < space.capacity %}
+                                    <small class="text-warning d-block mt-1">
+                                        <i class="bi bi-info-circle"></i> {{ space.capacity|add:"-"|add:space.active_seats }} seats need installation/repair
+                                    </small>
+                                {% endif %}
+                            {% else %}
+                                <!-- Message for inactive spaces -->
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-building-slash"></i> This study space is currently inactive
+                                </small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Seat Statistics - Greys out when inactive -->
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <div class="border-end {% if not space.is_active %}border-secondary{% endif %}">
+                                    <h6 class="mb-0 {% if not space.is_active %}text-muted{% endif %}">{{ space.total_seats }}</h6>
+                                    <small class="{% if not space.is_active %}text-muted{% endif %}">Total Seats</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div>
+                                    <h6 class="mb-0 {% if not space.is_active %}text-muted{% else %}text-success{% endif %}">
+                                        {% if space.is_active %}{{ space.active_seats }}{% else %}0{% endif %}
+                                    </h6>
+                                    <small class="{% if not space.is_active %}text-muted{% endif %}">Active Seats</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Created Date -->
+                        <small class="text-muted d-block">
+                            <i class="bi bi-calendar"></i> Created: {{ space.created_at|date:"M d, Y" }}
+                        </small>
+                    </div>
+                    
+                    <!-- Card Footer - Action buttons -->
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group w-100" role="group">
+                            <a href="{% url 'study_space_management:study_space_detail' space.id %}" 
+                               class="btn btn-sm {% if space.is_active %}btn-outline-primary{% else %}btn-outline-secondary{% endif %}">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <a href="{% url 'study_space_management:study_space_update' space.id %}" 
+                               class="btn btn-sm {% if space.is_active %}btn-outline-warning{% else %}btn-outline-secondary{% endif %}">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{% url 'study_space_management:study_space_delete' space.id %}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete {{ space.name }}?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+        <!-- ==================== EMPTY STATE ==================== -->
+        <!-- Shows when no study spaces are found -->
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-building fs-1"></i>
+                    <h4 class="mt-3">No study spaces found</h4>
+                    <!-- Different message based on whether filters are active -->
+                    {% if search_query or status_filter or category_filter %}
+                        <p>No spaces match your filter criteria. Try clearing the filters.</p>
+                        <a href="{% url 'study_space_management:study_space_list' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-x-circle"></i> Clear All Filters
+                        </a>
+                    {% else %}
+                        <p>Get started by creating your first study space.</p>
+                        <a href="{% url 'study_space_management:study_space_create' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-circle"></i> Create Study Space
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ==================== CUSTOM CSS STYLES ==================== -->
+<!-- Adds hover effects and transitions for better user experience -->
+<style>
+    /* Hover effect - lifts card when mouse hovers */
+    .hover-shadow {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Smooth transitions */
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Progress bar styling */
+    .progress {
+        background-color: #e9ecef;
+    }
+</style>
+<script>
+    // Set progress bar widths dynamically to avoid CSS linter errors
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.progress-bar').forEach(function(bar) {
+            var width = bar.getAttribute('data-width');
+            if (width) {
+                bar.style.width = width + '%';
+            }
+        });
+    });
+</script>
+{% endblock %}

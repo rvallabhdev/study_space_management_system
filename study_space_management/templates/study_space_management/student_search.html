@@ -1,0 +1,51 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Search Results</h1>
+        <a href="{% url 'study_space_management:student_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to All Students
+        </a>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-search"></i> Found {{ students.count }} result(s) for "{{ search_query }}"
+    </div>
+
+    <div class="row">
+        {% for student in students %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                {% if student.student_image %}
+                    <img src="{{ student.student_image.url }}" 
+                         class="card-img-top" 
+                         alt="{{ student.name }}"
+                         style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ student.name }}</h5>
+                    <p class="card-text">
+                        <strong>Mobile:</strong> {{ student.mobile }}<br>
+                        <strong>Course:</strong> {{ student.course_name }}
+                    </p>
+                    <a href="{% url 'study_space_management:student_detail' student.id %}" 
+                       class="btn btn-primary btn-sm">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> No students found matching "{{ search_query }}".
+                <a href="{% url 'study_space_management:student_create' %}" class="alert-link">Add new student</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

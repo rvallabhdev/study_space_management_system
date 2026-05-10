@@ -1,0 +1,175 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}{{ title }} - Seat Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                
+                <!-- ==================== CARD HEADER ==================== -->
+                <!-- Shows the form title (Add Seat / Edit Seat) -->
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-chair"></i> {{ title }}
+                    </h3>
+                </div>
+                
+                <!-- ==================== FORM BODY ==================== -->
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- ==================== NON-FIELD ERRORS ==================== -->
+                        <!-- Shows errors that don't belong to any specific field (e.g., capacity exceeded) -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            
+                            <!-- ==================== STUDY SPACE FIELD ==================== -->
+                            <!-- Dropdown to select which study space this seat belongs to -->
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.study_space.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-building"></i> {{ form.study_space.label }}
+                                    {% if form.study_space.field.required %}
+                                        <span class="text-danger">*</span>  <!-- Required field indicator -->
+                                    {% endif %}
+                                </label>
+                                {{ form.study_space }}
+                                
+                                <!-- Help text (if any) -->
+                                {% if form.study_space.help_text %}
+                                    <small class="form-text text-muted">{{ form.study_space.help_text }}</small>
+                                {% endif %}
+                                
+                                <!-- Field-specific errors (e.g., space is full, space inactive) -->
+                                {% if form.study_space.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.study_space.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- ==================== SEAT NUMBER FIELD ==================== -->
+                            <!-- Unique identifier for the seat (e.g., A1, S5, AC10) -->
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.seat_number.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-hash"></i> {{ form.seat_number.label }}
+                                    {% if form.seat_number.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ form.seat_number }}
+                                
+                                {% if form.seat_number.help_text %}
+                                    <small class="form-text text-muted">{{ form.seat_number.help_text }}</small>
+                                {% endif %}
+                                
+                                <!-- Errors: invalid format, duplicate seat number, reserved words -->
+                                {% if form.seat_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.seat_number.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- ==================== SEAT TYPE FIELD ==================== -->
+                            <!-- Dropdown to select Standard (Non-AC) or Premium (Air Conditioned) -->
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.seat_type.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-tag"></i> {{ form.seat_type.label }}
+                                    {% if form.seat_type.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ form.seat_type }}
+                                
+                                {% if form.seat_type.help_text %}
+                                    <small class="form-text text-muted">{{ form.seat_type.help_text }}</small>
+                                {% endif %}
+                                
+                                {% if form.seat_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.seat_type.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- ==================== ACTIVE STATUS FIELD ==================== -->
+                            <!-- Checkbox to mark seat as active (available) or inactive (under maintenance) -->
+                            <div class="col-md-12 mb-4">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                        <i class="bi bi-check-circle"></i> {{ form.is_active.label }}
+                                    </label>
+                                    
+                                    {% if form.is_active.help_text %}
+                                        <br><small class="form-text text-muted">{{ form.is_active.help_text }}</small>
+                                    {% endif %}
+                                    
+                                    {% if form.is_active.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.is_active.errors %}
+                                                <i class="bi bi-x-circle"></i> {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ==================== FORM BUTTONS ==================== -->
+                        <!-- Cancel and Submit buttons -->
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <!-- Cancel button - dynamic redirect based on context -->
+                            <a href="
+                                {% if seat %}
+                                    {# If editing, go back to the study space detail page #}
+                                    {% url 'study_space_management:study_space_detail' seat.study_space.pk %}
+                                {% else %}
+                                    {# If creating new, go back to seat list page #}
+                                    {% url 'study_space_management:seat_list' %}
+                                {% endif %}
+                            " class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            
+                            <!-- Submit button - text changes based on context -->
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if seat %}
+                                    Update Seat
+                                {% else %}
+                                    Create Seat
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CUSTOM CSS STYLES ==================== -->
+<style>
+    /* Gradient background for card header */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}

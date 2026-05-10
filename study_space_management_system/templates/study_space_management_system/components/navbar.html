@@ -1,0 +1,169 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'study_space_management:home' %}">
+      <i class="bi bi-building"></i> SSMS
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarMain">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- Dashboard -->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'study_space_management:home' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+        </li>
+
+        <!-- Students -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="studentsMenu" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-people"></i> Students
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="studentsMenu">
+            <li><a class="dropdown-item" href="{% url 'study_space_management:student_list' %}"><i class="bi bi-list-ul"></i> All Students</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:student_create' %}"><i class="bi bi-person-plus"></i> Add Student</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:student_list' %}?active=true"><i class="bi bi-check-circle"></i> Active Students</a></li>
+          </ul>
+        </li>
+
+        <!-- Study Spaces (was "Spaces") -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="spacesMenu" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-building"></i> Study Spaces
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="spacesMenu">
+            <li><a class="dropdown-item" href="{% url 'study_space_management:study_space_list' %}"><i class="bi bi-list-ul"></i> All Spaces</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:study_space_create' %}"><i class="bi bi-plus-circle"></i> Add Space</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:seat_list' %}"><i class="bi bi-grid-3x3-gap-fill"></i> All Seats</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:seat_create' %}"><i class="bi bi-plus-square"></i> Add Seat</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:bulk_seat_create' %}"><i class="bi bi-layers"></i> Bulk Add Seats</a></li>
+          </ul>
+        </li>
+
+        <!-- Time Slots (was "Scheduling") -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="timeSlotsMenu" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-clock-history"></i> Time Slots
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="timeSlotsMenu">
+            <li><a class="dropdown-item" href="{% url 'study_space_management:time_slot_list' %}"><i class="bi bi-list-ul"></i> All Time Slots</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:time_slot_create' %}"><i class="bi bi-plus-circle"></i> Add Time Slot</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:occupancy_gantt' %}"><i class="bi bi-calendar-week"></i> Occupancy</a></li>
+          </ul>
+        </li>
+
+        <!-- Enrollments (was "Operations") -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="enrollmentsMenu" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-journal-bookmark-fill"></i> Enrollments
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="enrollmentsMenu">
+            <li><a class="dropdown-item" href="{% url 'operations_management:enrollment_list' %}"><i class="bi bi-list-ul"></i> All Enrollments</a></li>
+            <li><a class="dropdown-item" href="{% url 'operations_management:enrollment_create' %}"><i class="bi bi-plus-circle"></i> New Enrollment</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'operations_management:enrollment_list' %}"><i class="bi bi-credit-card"></i> Record/Track Payments</a></li>
+            <li><a class="dropdown-item" href="{% url 'study_space_management:occupancy_gantt' %}"><i class="bi bi-bar-chart-steps"></i> Occupancy Overview</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- Search (students only) -->
+      <form class="d-flex me-2" method="GET" action="{% url 'study_space_management:student_list' %}">
+        <input class="form-control me-2" type="search" placeholder="Search students..." aria-label="Search" name="q">
+        <button class="btn btn-outline-light" type="submit"><i class="bi bi-search"></i></button>
+      </form>
+
+      <!-- User menu -->
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+            {% if user.is_authenticated %}
+              <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+            {% else %}
+              <i class="bi bi-person-circle"></i> Guest
+            {% endif %}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+            {% if user.is_authenticated %}
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person-badge"></i> Profile</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="{% url 'user_management:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            {% else %}
+              <li><a class="dropdown-item" href="{% url 'user_management:login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+              <li><a class="dropdown-item" href="{% url 'user_management:register' %}"><i class="bi bi-person-plus"></i> Register</a></li>
+            {% endif %}
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+  /* All styles remain exactly as before */
+  .navbar-nav .nav-link {
+    transition: all 0.3s ease;
+  }
+  .navbar-nav .nav-link:hover {
+    transform: translateY(-2px);
+    color: #ffc107 !important;
+  }
+  .dropdown-item i {
+    margin-right: 8px;
+    width: 20px;
+  }
+  .dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    transition: all 0.2s ease;
+  }
+  .dropdown-header {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+  }
+  .navbar-nav .nav-link.active {
+    color: #ffc107 !important;
+    font-weight: bold;
+  }
+  .navbar .form-control:focus {
+    box-shadow: none;
+    border-color: #ffc107;
+  }
+  .navbar-brand {
+    transition: all 0.3s ease;
+  }
+  .navbar-brand:hover {
+    transform: scale(1.02);
+    color: #ffc107 !important;
+  }
+  .dropdown-menu {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && href !== '#' && currentPath === href) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>

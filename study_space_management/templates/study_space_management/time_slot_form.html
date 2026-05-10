@@ -1,0 +1,171 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                
+                <!-- ==================== CARD HEADER ==================== -->
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-clock-history"></i> {{ title }}
+                    </h3>
+                </div>
+                
+                <!-- ==================== FORM BODY ==================== -->
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Display non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Loop through all form fields -->
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi 
+                                        {% if field.name == 'study_space' %}bi-building
+                                        {% elif field.name == 'start_time' %}bi-clock
+                                        {% elif field.name == 'duration_hours' %}bi-hourglass-split
+                                        {% elif field.name == 'is_active' %}bi-check-circle
+                                        {% else %}bi-question-circle{% endif %}
+                                    "></i>
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                
+                                {{ field }}
+                                
+                                <!-- Help Text -->
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                                
+                                <!-- Field Errors -->
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in field.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <!-- Live Preview of End Time -->
+                        <div id="preview-box" class="alert alert-info mt-3" style="display: none;">
+                            <i class="bi bi-eye"></i> 
+                            <strong>Preview:</strong> 
+                            <span id="end-time-preview"></span>
+                        </div>
+                        
+                        <!-- Info Alert -->
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <strong>Note:</strong> Time slots are specific to each study space. 
+                            You can create different schedules for different spaces.
+                        </div>
+                        
+                        <!-- ==================== FORM BUTTONS ==================== -->
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <a href="{% url 'study_space_management:time_slot_list' %}" class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if time_slot %}Update Slot{% else %}Create Slot{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== JAVASCRIPT FOR LIVE PREVIEW ==================== -->
+<script>
+    // Live preview of calculated end time based on start time and duration
+    document.addEventListener('DOMContentLoaded', function() {
+        const startTimeInput = document.getElementById('id_start_time');
+        const durationInput = document.getElementById('id_duration_hours');
+        const previewBox = document.getElementById('preview-box');
+        const previewSpan = document.getElementById('end-time-preview');
+        
+        function updatePreview() {
+            const startTime = startTimeInput?.value;
+            const duration = parseFloat(durationInput?.value);
+            
+            if (startTime && duration && !isNaN(duration)) {
+                // Parse start time
+                const [hours, minutes] = startTime.split(':').map(Number);
+                
+                // Calculate total minutes from midnight
+                let totalMinutes = (hours * 60) + minutes;
+                const durationMinutes = duration * 60;
+                totalMinutes += durationMinutes;
+                
+                // Calculate end time
+                const endHours = Math.floor(totalMinutes / 60) % 24;
+                const endMinutes = Math.floor(totalMinutes % 60);
+                
+                // Format end time (12-hour format with AM/PM)
+                const endDate = new Date();
+                endDate.setHours(endHours, endMinutes);
+                const endTime12 = endDate.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    hour12: true 
+                });
+                
+                // Format start time for display
+                const startDate = new Date();
+                startDate.setHours(hours, minutes);
+                const startTime12 = startDate.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    hour12: true 
+                });
+                
+                // Show preview
+                previewSpan.innerHTML = `<strong>${endTime12}</strong> (${startTime12} + ${duration} hours)`;
+                previewBox.style.display = 'block';
+            } else {
+                previewBox.style.display = 'none';
+            }
+        }
+        
+        // Attach event listeners
+        startTimeInput?.addEventListener('change', updatePreview);
+        startTimeInput?.addEventListener('input', updatePreview);
+        durationInput?.addEventListener('change', updatePreview);
+        durationInput?.addEventListener('input', updatePreview);
+        
+        // Initial preview if values exist
+        updatePreview();
+    });
+</script>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    input:focus, select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}

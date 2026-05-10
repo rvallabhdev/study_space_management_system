@@ -1,0 +1,411 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Record Payment - {{ enrollment.student.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-summary-card {
+        transition: all 0.3s ease;
+    }
+    .payment-summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+    .amount-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .amount-card:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.02);
+    }
+    .quick-amount {
+        transition: all 0.2s ease;
+    }
+    .quick-amount:hover {
+        background-color: #e9ecef;
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-credit-card"></i> Record Payment
+                    </h3>
+                    <p class="mb-0 mt-1 small opacity-75">Enter payment details for {{ enrollment.student.name }}</p>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <!-- ==================== ENROLLMENT SUMMARY ==================== -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card payment-summary-card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                                            <i class="bi bi-person fs-4 text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted">Student</h6>
+                                            <h5 class="mb-0">{{ enrollment.student.name }}</h5>
+                                            <small class="text-muted">{{ enrollment.student.mobile }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                                            <i class="bi bi-building fs-4 text-success"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted">Study Space</h6>
+                                            <h5 class="mb-0">{{ enrollment.study_space.name }}</h5>
+                                            <small class="text-muted">
+                                                {% if enrollment.seat %}Seat: {{ enrollment.seat.seat_number }}{% else %}Seat not assigned{% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card payment-summary-card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                                            <i class="bi bi-calendar-check fs-4 text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted">Enrollment Period</h6>
+                                            <h5 class="mb-0">{{ enrollment.start_date|date:"d M Y" }} - {{ enrollment.end_date|date:"d M Y" }}</h5>
+                                            <small class="text-muted">{{ enrollment.get_booking_type_display }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                                            <i class="bi bi-currency-rupee fs-4 text-info"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted">Total Amount</h6>
+                                            <h3 class="mb-0 text-success">₹{{ enrollment.total_amount|floatformat:2 }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ==================== PAYMENT STATUS ==================== -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h6 class="mb-0">Total Amount</h6>
+                                <h4 class="mb-0">₹{{ enrollment.total_amount|floatformat:2 }}</h4>
+                            </div>
+                            <div class="col-md-4 border-start border-end">
+                                <h6 class="mb-0">Already Paid</h6>
+                                <h4 class="mb-0 text-success">₹{{ total_paid|floatformat:2 }}</h4>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="mb-0">Pending Amount</h6>
+                                <h4 class="mb-0 text-warning">₹{{ pending_amount|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ==================== QUICK AMOUNT SELECTION ==================== -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-lightning-charge"></i> Quick Amount Selection
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary w-100 quick-amount" data-amount="{{ pending_amount }}">
+                                    <i class="bi bi-calculator"></i> Full Amount<br>
+                                    <small>₹{{ pending_amount|floatformat:2 }}</small>
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary w-100 quick-amount" data-amount="{{ half_pending_amount|floatformat:2 }}">
+                                    <i class="bi bi-percent"></i> 50%<br>
+                                    <small>₹{{ half_pending_amount|floatformat:2 }}</small>
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary w-100 quick-amount" data-amount="1000">
+                                    <i class="bi bi-cash-stack"></i> ₹1,000
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary w-100 quick-amount" data-amount="500">
+                                    <i class="bi bi-cash"></i> ₹500
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ==================== PAYMENT FORM ==================== -->
+                    <form method="post" id="paymentForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Amount Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label fw-bold">
+                                    <i class="bi bi-currency-rupee"></i> Amount *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-primary text-white">₹</span>
+                                    <input type="number" name="amount" id="amount" class="form-control form-control-lg" 
+                                           step="0.01" min="1" max="{{ pending_amount }}" 
+                                           placeholder="Enter amount" required
+                                           value="{% if pending_amount == enrollment.total_amount %}{{ pending_amount }}{% endif %}">
+                                </div>
+                                <small class="text-muted">Maximum amount: ₹{{ pending_amount|floatformat:2 }}</small>
+                                <div id="amountError" class="text-danger small mt-1" style="display: none;"></div>
+                            </div>
+                            
+                            <!-- Payment Date Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_date" class="form-label fw-bold">
+                                    <i class="bi bi-calendar"></i> Payment Date *
+                                </label>
+                                <input type="date" name="payment_date" id="payment_date" class="form-control" 
+                                       value="{{ today }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Payment Mode Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_mode" class="form-label fw-bold">
+                                    <i class="bi bi-wallet2"></i> Payment Mode *
+                                </label>
+                                <select name="payment_mode" id="payment_mode" class="form-select" required>
+                                    <option value="">Select payment mode...</option>
+                                    {% for mode_value, mode_label in payment_modes %}
+                                        <option value="{{ mode_value }}">{{ mode_label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Receipt Number Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="receipt_number" class="form-label fw-bold">
+                                    <i class="bi bi-receipt"></i> Receipt Number
+                                </label>
+                                <input type="text" name="receipt_number" id="receipt_number" class="form-control" 
+                                       placeholder="Auto-generated if left blank">
+                                <small class="text-muted">Leave blank for auto-generation (RCPT/YYYY/MM/XXXX)</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes Field -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label fw-bold">
+                                <i class="bi bi-pencil-square"></i> Notes (Optional)
+                            </label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                      placeholder="Enter any additional notes about this payment..."></textarea>
+                        </div>
+                        
+                        <!-- Payment Summary Preview -->
+                        <div class="alert alert-secondary mt-3" id="paymentPreview" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-receipt"></i> <strong>Payment Summary</strong>
+                                </div>
+                                <div>
+                                    Amount: <strong id="previewAmount" class="text-success">₹0.00</strong>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <div class="row small text-muted">
+                                <div class="col-md-6">
+                                    After payment, total paid: <strong id="previewTotalPaid">₹{{ total_paid|floatformat:2 }}</strong>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    Remaining pending: <strong id="previewPending" class="text-warning">₹{{ pending_amount|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Warning for Overpayment -->
+                        <div id="overpaymentWarning" class="alert alert-danger" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>Overpayment Alert:</strong> The amount entered exceeds the pending amount.
+                            Please enter a valid amount.
+                        </div>
+                        
+                        <!-- Info for Full Payment -->
+                        <div id="fullPaymentInfo" class="alert alert-success" style="display: none;">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <strong>Full Payment!</strong> This will mark the enrollment as fully paid.
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Note:</strong> After recording payment, the enrollment status will be updated to "Paid" when the full amount is received.
+                            Receipt number will be auto-generated in format: <code>RCPT/YYYY/MM/XXXX</code>
+                        </div>
+                        
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'operations_management:enrollment_detail' enrollment.id %}" 
+                               class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4" id="submitBtn">
+                                <i class="bi bi-check-circle"></i> Record Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amount');
+    const pendingAmount = parseFloat('{{ pending_amount|default:"0"|escapejs }}');
+    const totalPaid = parseFloat('{{ total_paid|default:"0"|escapejs }}');
+    const previewDiv = document.getElementById('paymentPreview');
+    const previewAmountSpan = document.getElementById('previewAmount');
+    const previewTotalPaidSpan = document.getElementById('previewTotalPaid');
+    const previewPendingSpan = document.getElementById('previewPending');
+    const overpaymentWarning = document.getElementById('overpaymentWarning');
+    const fullPaymentInfo = document.getElementById('fullPaymentInfo');
+    const submitBtn = document.getElementById('submitBtn');
+    const amountError = document.getElementById('amountError');
+    
+    // Quick amount buttons
+    const quickAmountBtns = document.querySelectorAll('.quick-amount');
+    quickAmountBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const amount = this.getAttribute('data-amount');
+            if (amount) {
+                amountInput.value = amount;
+                validateAmount();
+            }
+        });
+    });
+    
+    // Validate amount function
+    function validateAmount() {
+        let amount = parseFloat(amountInput.value);
+        let isValid = true;
+        let errorMsg = '';
+        
+        if (isNaN(amount)) {
+            errorMsg = 'Please enter a valid amount.';
+            isValid = false;
+        } else if (amount <= 0) {
+            errorMsg = 'Amount must be greater than zero.';
+            isValid = false;
+        } else if (amount > pendingAmount) {
+            errorMsg = `Amount cannot exceed pending amount of ₹${pendingAmount.toFixed(2)}.`;
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            amountError.textContent = errorMsg;
+            amountError.style.display = 'block';
+            amountInput.classList.add('is-invalid');
+            overpaymentWarning.style.display = 'none';
+            fullPaymentInfo.style.display = 'none';
+            previewDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            return false;
+        }
+        
+        amountError.style.display = 'none';
+        amountInput.classList.remove('is-invalid');
+        submitBtn.disabled = false;
+        
+        // Show/hide overpayment warning
+        if (amount > pendingAmount) {
+            overpaymentWarning.style.display = 'block';
+            previewDiv.style.display = 'none';
+            return false;
+        } else {
+            overpaymentWarning.style.display = 'none';
+        }
+        
+        // Show/hide full payment info
+        if (Math.abs(amount - pendingAmount) < 0.01) {
+            fullPaymentInfo.style.display = 'block';
+        } else {
+            fullPaymentInfo.style.display = 'none';
+        }
+        
+        // Update preview
+        const newTotalPaid = totalPaid + amount;
+        const newPending = pendingAmount - amount;
+        
+        previewAmountSpan.textContent = `₹${amount.toFixed(2)}`;
+        previewTotalPaidSpan.textContent = `₹${newTotalPaid.toFixed(2)}`;
+        previewPendingSpan.textContent = `₹${newPending.toFixed(2)}`;
+        previewDiv.style.display = 'block';
+        
+        return true;
+    }
+    
+    // Add event listeners
+    amountInput.addEventListener('input', validateAmount);
+    amountInput.addEventListener('change', validateAmount);
+    
+    // Form validation before submit
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        if (!validateAmount()) {
+            e.preventDefault();
+            amountInput.focus();
+        }
+    });
+    
+    // Initial validation if amount is pre-filled
+    validateAmount();
+    
+    // Set max attribute dynamically
+    amountInput.setAttribute('max', pendingAmount);
+    
+    // Format amount display
+    function formatAmount(value) {
+        return new Intl.NumberFormat('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+});
+</script>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+    .btn {
+        transition: all 0.2s ease;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    .payment-summary-card {
+        transition: all 0.3s ease;
+    }
+    .quick-amount {
+        transition: all 0.2s ease;
+    }
+    .quick-amount:active {
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}

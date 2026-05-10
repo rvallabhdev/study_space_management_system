@@ -1,0 +1,198 @@
+{% extends 'study_space_management_system/base.html' %}
+
+{% block title %}Bulk Add Seats{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-gradient-success text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-layers"></i> Bulk Add Seats
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>How it works:</strong> This form allows you to create multiple seats at once.
+                        For example, with prefix "A", start number 1, end number 10, you'll create A1, A2, A3... A10.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Display non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <!-- Study Space Field -->
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.study_space.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-building"></i> {{ form.study_space.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.study_space }}
+                                {% if form.study_space.help_text %}
+                                    <small class="form-text text-muted">{{ form.study_space.help_text }}</small>
+                                {% endif %}
+                                {% if form.study_space.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.study_space.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Seat Prefix Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.seat_prefix.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-fonts"></i> {{ form.seat_prefix.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.seat_prefix }}
+                                {% if form.seat_prefix.help_text %}
+                                    <small class="form-text text-muted">{{ form.seat_prefix.help_text }}</small>
+                                {% endif %}
+                                {% if form.seat_prefix.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.seat_prefix.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Seat Type Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.seat_type.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-tag"></i> {{ form.seat_type.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.seat_type }}
+                                {% if form.seat_type.help_text %}
+                                    <small class="form-text text-muted">{{ form.seat_type.help_text }}</small>
+                                {% endif %}
+                                {% if form.seat_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.seat_type.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Start Number Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.start_number.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-sort-numeric-down"></i> {{ form.start_number.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.start_number }}
+                                {% if form.start_number.help_text %}
+                                    <small class="form-text text-muted">{{ form.start_number.help_text }}</small>
+                                {% endif %}
+                                {% if form.start_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.start_number.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- End Number Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.end_number.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-sort-numeric-up"></i> {{ form.end_number.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.end_number }}
+                                {% if form.end_number.help_text %}
+                                    <small class="form-text text-muted">{{ form.end_number.help_text }}</small>
+                                {% endif %}
+                                {% if form.end_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.end_number.errors %}
+                                            <i class="bi bi-x-circle"></i> {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Section -->
+                        <div class="alert alert-secondary mt-3" id="previewAlert" style="display: none;">
+                            <i class="bi bi-eye"></i>
+                            <strong>Preview:</strong> You are about to create:
+                            <code id="seatPreview"></code>
+                        </div>
+                        
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <a href="{% url 'study_space_management:seat_list' %}" class="btn btn-secondary px-4">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-layers"></i> Create Seats
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live preview of seats to be created
+    document.addEventListener('DOMContentLoaded', function() {
+        const prefix = document.getElementById('id_seat_prefix');
+        const start = document.getElementById('id_start_number');
+        const end = document.getElementById('id_end_number');
+        const previewAlert = document.getElementById('previewAlert');
+        const previewSpan = document.getElementById('seatPreview');
+        
+        function updatePreview() {
+            if (prefix.value && start.value && end.value) {
+                const startNum = parseInt(start.value);
+                const endNum = parseInt(end.value);
+                
+                if (!isNaN(startNum) && !isNaN(endNum) && startNum <= endNum) {
+                    const seats = [];
+                    for (let i = startNum; i <= endNum; i++) {
+                        seats.push(`${prefix.value}${i}`);
+                    }
+                    
+                    if (seats.length > 0) {
+                        previewSpan.textContent = seats.join(', ');
+                        previewAlert.style.display = 'block';
+                        return;
+                    }
+                }
+            }
+            previewAlert.style.display = 'none';
+        }
+        
+        prefix.addEventListener('input', updatePreview);
+        start.addEventListener('input', updatePreview);
+        end.addEventListener('input', updatePreview);
+        
+        // Initial preview if values exist
+        updatePreview();
+    });
+</script>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    }
+</style>
+{% endblock %}
