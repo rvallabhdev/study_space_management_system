@@ -130,3 +130,20 @@ MEDIA_ROOT = BASE_DIR / 'media'           # User uploads go here
 LOGIN_URL = '/auth/login_user/'  # Your actual login URL
 LOGIN_REDIRECT_URL = '/'         # Where to go after login
 LOGOUT_REDIRECT_URL = '/auth/login_user/'  # Where to go after logout
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://study-space-management-system.onrender.com","http://127.0.0.1","http://localhost",
+]
+
+# Media files (Uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # CHANGED: Use BASE_DIR directly
+
+# File upload settings
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_NUMBER_FILES = 1
+
+# Ensure media directory exists (ADD THIS)
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
